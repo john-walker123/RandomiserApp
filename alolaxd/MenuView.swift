@@ -8,80 +8,96 @@
 import SwiftUI
 
 struct MenuView: View {
-    private let columns = [GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 14)]
-
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 4) {
+                VStack(spacing: 28) {
+                    VStack(spacing: 4) {
                         Text("Randomiser")
                             .font(.largeTitle.weight(.bold))
                         Text("Useful everyday tools, all in one place.")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }
+                    .multilineTextAlignment(.center)
 
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        NavigationLink {
-                            DiceRollerView()
-                        } label: {
-                            ToolCard(title: "Dice Roller",
-                                     subtitle: "Roll a six-sided die",
-                                     symbol: "dice.fill",
-                                     tint: .blue)
-                        }
-
-                        NavigationLink {
-                            CoinFlipView()
-                        } label: {
-                            ToolCard(title: "Coin Flip",
-                                     subtitle: "Heads or tails",
-                                     symbol: "circle.lefthalf.filled",
-                                     tint: .green)
-                        }
-
-                        NavigationLink {
-                            RandomNumberView()
-                        } label: {
-                            ToolCard(title: "Random Number",
-                                     subtitle: "Pick a number in any range",
-                                     symbol: "number",
-                                     tint: .purple)
-                        }
-
-                        NavigationLink {
-                            CurrencyConverterView()
-                        } label: {
-                            ToolCard(title: "Currency Converter",
-                                     subtitle: "Custom exchange rate",
-                                     symbol: "arrow.left.arrow.right",
-                                     tint: .red)
-                        }
-
-                        NavigationLink {
-                            PasswordGeneratorView()
-                        } label: {
-                            ToolCard(title: "Password Generator",
-                                     subtitle: "Memorable passwords",
-                                     symbol: "key.fill",
-                                     tint: .orange)
-                        }
+                    MenuSection(title: "Chance") {
+                        ToolLink(title: "Dice Roller", subtitle: "Roll a six-sided die",
+                                 symbol: "dice.fill", tint: .blue) { DiceRollerView() }
+                        ToolLink(title: "Coin Flip", subtitle: "Heads or tails",
+                                 symbol: "circle.lefthalf.filled", tint: .green) { CoinFlipView() }
+                        ToolLink(title: "Spin the Wheel", subtitle: "Let the wheel choose for you",
+                                 symbol: "chart.pie.fill", tint: .pink) { WheelSpinnerView() }
+                        ToolLink(title: "Card Draw", subtitle: "Draw from a shuffled deck",
+                                 symbol: "suit.spade.fill", tint: .indigo) { CardDrawView() }
+                        ToolLink(title: "Yes or No", subtitle: "Ask a question, get an answer",
+                                 symbol: "questionmark.bubble.fill", tint: .mint) { DecisionMakerView() }
                     }
-                    .buttonStyle(.plain)
-                    .focusEffectDisabled()
+
+                    MenuSection(title: "Generators") {
+                        ToolLink(title: "Random Number", subtitle: "Pick a number in any range",
+                                 symbol: "number", tint: .purple) { RandomNumberView() }
+                        ToolLink(title: "Password Generator", subtitle: "Memorable passwords",
+                                 symbol: "key.fill", tint: .orange) { PasswordGeneratorView() }
+                        ToolLink(title: "Team Generator", subtitle: "Split names into random teams",
+                                 symbol: "person.3.fill", tint: .teal) { TeamGeneratorView() }
+                        ToolLink(title: "Random Colour", subtitle: "Discover a new colour",
+                                 symbol: "paintpalette.fill", tint: .brown) { ColourGeneratorView() }
+                    }
+
+                    MenuSection(title: "Utilities") {
+                        ToolLink(title: "Currency Converter", subtitle: "Live exchange rates",
+                                 symbol: "arrow.left.arrow.right", tint: .red) { CurrencyConverterView() }
+                    }
                 }
-                .frame(maxWidth: 960, alignment: .leading)
+                .frame(maxWidth: 440)
                 .padding(32)
                 .frame(maxWidth: .infinity)
             }
             .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 520, minHeight: 460)
+        .frame(minWidth: 480, minHeight: 520)
     }
 }
 
-/// A clickable tile on the home screen.
+/// A titled group of tools in the vertical list.
+private struct MenuSection<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+            VStack(spacing: 10) {
+                content
+            }
+        }
+    }
+}
+
+/// A home screen row that opens a tool.
+private struct ToolLink<Destination: View>: View {
+    let title: String
+    let subtitle: String
+    let symbol: String
+    let tint: Color
+    @ViewBuilder var destination: () -> Destination
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            ToolCard(title: title, subtitle: subtitle, symbol: symbol, tint: tint)
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+    }
+}
+
+/// A clickable row on the home screen.
 struct ToolCard: View {
     let title: String
     let subtitle: String
@@ -92,7 +108,7 @@ struct ToolCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            IconBadge(symbol: symbol, tint: tint, size: 40)
+            IconBadge(symbol: symbol, tint: tint, size: 38)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -109,7 +125,7 @@ struct ToolCard: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
-        .padding(16)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)

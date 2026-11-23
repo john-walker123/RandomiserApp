@@ -90,9 +90,11 @@ struct LabeledInput<Field: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if !label.isEmpty {
+                Text(label)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             field
                 .textFieldStyle(.plain)
                 .font(.title3)
