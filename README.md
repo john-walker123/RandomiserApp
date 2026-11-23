@@ -10,6 +10,8 @@ Randomiser is a macOS app built with SwiftUI, designed to bring together handy u
 
 Visit the [Releases](https://github.com/john-walker123/RandomiserApp/releases) page to view previous versions and their release notes.
 
+Want to check out community contributions and experimental builds? View the [Pull Requests branch](https://github.com).
+
 ## Installation
 
 1. Download the latest `Randomiser.Installer.dmg` from Releases.
@@ -36,13 +38,13 @@ Found a bug or have an idea for a new feature?
 - [Report a bug](https://github.com/john-walker123/RandomiserApp/issues)
 - [Suggest a feature](https://github.com/john-walker123/RandomiserApp/issues)
 
-Feedback and suggestions are always welcome!
+Community contributions are stored in the [`Pull-Requests`](https://github.com) branch. Feedback and suggestions are always welcome!
 
 ## Versioning
 
 Randomiser follows version-based releases. Each release includes its own notes describing the changes and improvements.
 
-See the [latest release](https://github.com/john-walker123/RandomiserApp/releases/latest).
+See the [latest release](https://github.com/john-walker123/RandomiserApp/releases/latest) or browse contributor versions on the [`Pull-Requests`](https://github.com) branch.
 
 ---
 
