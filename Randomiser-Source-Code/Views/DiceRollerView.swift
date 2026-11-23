@@ -8,202 +8,134 @@
 import SwiftUI
 
 struct DiceRollerView: View {
-    @State var selectedDice = 0
-    
-    func Roll() {
-        selectedDice = Int.random(in: 0...5)
-    }
-    
-    func show1onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .frame(width: 100, height: 100)
-                .foregroundStyle(.white)
-                .shadow(radius: 5)
-            
-            HStack {
-                Circle()
-                    .frame(width: 20, height: 20)
-                    .foregroundStyle(.black)
+    @State private var value = 1
+    @State private var hasRolled = false
+    @State private var isRolling = false
+    @State private var tilt = 0.0
+    @State private var history: [Int] = []
+
+    func roll() {
+        guard !isRolling else { return }
+        isRolling = true
+
+        Task { @MainActor in
+            // Tumble through a few random faces before landing on the result.
+            for _ in 0..<8 {
+                withAnimation(.easeInOut(duration: 0.07)) {
+                    value = Int.random(in: 1...6)
+                    tilt = Double.random(in: -18...18)
+                }
+                try? await Task.sleep(nanoseconds: 70_000_000)
             }
-        }
-    }
-    
-    func show2onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.white)
-                .frame(width: 100, height: 100)
-                .shadow(radius: 5)
-            
-            HStack(spacing: 20) {
-                Circle()
-                    .frame(width: 20, height: 20)
-                    .foregroundStyle(.black)
-                
-                Circle()
-                    .frame(width: 20, height: 20)
-                    .foregroundStyle(.black)
+
+            let result = Int.random(in: 1...6)
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) {
+                value = result
+                tilt = 0
+                hasRolled = true
+                history.insert(result, at: 0)
+                if history.count > 10 { history.removeLast() }
             }
+            isRolling = false
         }
     }
-    
-    func show3onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.white)
-                .frame(width: 100, height: 100)
-                .shadow(radius: 5)
-            
-            Circle()
-                .frame(width: 20, height: 20)
-                .offset(x: -25, y: -25)
-                .foregroundStyle(.black)
-            
-            Circle()
-                .frame(width: 20, height: 20)
-                .foregroundStyle(.black)
-            
-            Circle()
-                .frame(width: 20, height: 20)
-                .offset(x: 25, y: 25)
-                .foregroundStyle(.black)
-        }
-    }
-    
-    func show4onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.white)
-                .frame(width: 100, height: 100)
-                .shadow(radius: 5)
-            
-            HStack(spacing: 25) {
-                VStack(spacing: 25) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                }
-                
-                VStack(spacing: 25) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                }
-            }
-        }
-    }
-    
-    func show5onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.white)
-                .frame(width: 100, height: 100)
-                .shadow(radius: 5)
-            
-            HStack(spacing: 25) {
-                VStack(spacing: 25) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                }
-                
-                VStack(spacing: 25) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                }
-            }
-            .foregroundStyle(.black)
-            
-            Circle()
-                .frame(width: 20, height: 20)
-                .foregroundStyle(.black)
-        }
-    }
-    
-    func show6onDice() -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.white)
-                .frame(width: 100, height: 100)
-                .shadow(radius: 5)
-            
-            VStack(spacing: 20) {
-                HStack(spacing: 10) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                }
-                
-                HStack(spacing: 10) {
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                    
-                    Circle()
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.black)
-                }
-            }
-        }
-    }
-    
-    var DiceViews: [AnyView] {
-        [
-            AnyView(show1onDice()),
-            AnyView(show2onDice()),
-            AnyView(show3onDice()),
-            AnyView(show4onDice()),
-            AnyView(show5onDice()),
-            AnyView(show6onDice())
-        ]
-    }
-    
+
     var body: some View {
-        VStack {
-            Text("Dice Roller!")
-            DiceViews[selectedDice]
-            
-            Button {
-                Roll()
-            } label: {
-                Text("Roll Dice")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.black)
-                    .frame(width: 200, height: 60)
-                    .background(.yellow)
-                    .cornerRadius(15)
+        ToolScreen(title: "Dice Roller",
+                   subtitle: "Roll a six-sided die.",
+                   symbol: "dice.fill",
+                   tint: .blue) {
+            Card(padding: 32) {
+                VStack(spacing: 24) {
+                    DieFace(value: value)
+                        .frame(width: 150, height: 150)
+                        .rotationEffect(.degrees(tilt))
+                        .scaleEffect(isRolling ? 0.92 : 1)
+
+                    Text(hasRolled ? "You rolled a \(value)" : "Ready to roll")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(hasRolled ? .primary : .secondary)
+                        .opacity(isRolling ? 0.3 : 1)
+                }
             }
-                .buttonStyle(.plain)
+
+            Button("Roll Dice", systemImage: "dice", action: roll)
+                .buttonStyle(.primary(.blue))
                 .focusEffectDisabled()
+                .keyboardShortcut(.defaultAction)
+                .disabled(isRolling)
+
+            if !history.isEmpty {
+                VStack(spacing: 10) {
+                    Text("Recent rolls")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        ForEach(Array(history.enumerated()), id: \.offset) { _, roll in
+                            DieFace(value: roll, pipColor: .white, faceColor: .blue)
+                                .frame(width: 28, height: 28)
+                        }
+                    }
+                }
+                .transition(.opacity)
+            }
         }
     }
 }
 
-// :)
+/// Draws a die face with pips laid out like a real die.
+struct DieFace: View {
+    let value: Int
+    var pipColor: Color = .black
+    var faceColor: Color = .white
+
+    /// Which cells of a 3×3 grid (0–8, row by row) hold a pip for each value.
+    private static let layouts: [Int: Set<Int>] = [
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8],
+    ]
+
+    var body: some View {
+        GeometryReader { geo in
+            let side = min(geo.size.width, geo.size.height)
+            let pip = side * 0.18
+            let inset = side * 0.14
+
+            ZStack {
+                RoundedRectangle(cornerRadius: side * 0.2, style: .continuous)
+                    .fill(faceColor)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: side * 0.2, style: .continuous)
+                            .strokeBorder(.black.opacity(0.18), lineWidth: max(1, side * 0.012))
+                    )
+
+                VStack(spacing: 0) {
+                    ForEach(0..<3) { row in
+                        HStack(spacing: 0) {
+                            ForEach(0..<3) { column in
+                                Circle()
+                                    .fill(pipColor)
+                                    .frame(width: pip, height: pip)
+                                    .opacity(Self.layouts[value, default: []].contains(row * 3 + column) ? 1 : 0)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            }
+                        }
+                    }
+                }
+                .padding(inset)
+            }
+            .frame(width: side, height: side)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement()
+        .accessibilityLabel("Die showing \(value)")
+    }
+}
+
+#Preview {
+    DiceRollerView()
+}

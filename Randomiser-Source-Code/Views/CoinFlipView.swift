@@ -7,102 +7,116 @@
 
 import SwiftUI
 
-struct CoinFlipView: View{
-    @State var selectedCoin = 0
+struct CoinFlipView: View {
+    @State private var isHeads = true
+    @State private var hasFlipped = false
+    @State private var isFlipping = false
     @State private var rotation = 0.0
-    
-    func showHeads() -> some View {
-        ZStack{
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [.yellow, Color(red: 0.85, green: 0.65, blue: 0.0)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 120, height: 120)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.6), lineWidth: 3)
-                )
-                .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 4)
-            Image("Heads")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200, height: 200)
-                .clipShape(Circle())
-        }
-    }
-    
-    
-    func showTails() -> some View {
-        ZStack{
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [.yellow, Color(red: 0.85, green: 0.65, blue: 0.0)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 120, height: 120)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.6), lineWidth: 3)
-                )
-                .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 4)
-            Image("Tails")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200, height: 200)
-                .clipShape(Circle())
-        }
-    }
-    
-    var CoinViews: [AnyView] {
-        [
-            AnyView(showHeads()),
-            AnyView(showTails())
-        ]
-    }
-    func Flip() {
-        let result = Int.random(in: 0...1)
-        
+    @State private var headsCount = 0
+    @State private var tailsCount = 0
+
+    func flip() {
+        guard !isFlipping else { return }
+        isFlipping = true
+        let result = Bool.random()
+
         withAnimation(.easeInOut(duration: 1.0)) {
             rotation += 1800
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-            selectedCoin = result
-        }
-    }
-    
-    var body: some View{
-        VStack{
-            Text("Coin Flipper!")
-            CoinViews[selectedCoin]
-                .rotation3DEffect(
-                    .degrees(rotation),
-                    axis: (x: 0, y: 1, z: 0)
-                )
-            Button {
-                Flip()
-            } label: {
-                Text("Flip Coin!")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.black)
-                    .frame(width: 200, height: 60)
-                    .background(.yellow)
-                    .cornerRadius(15)
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            isHeads = result
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                hasFlipped = true
+                if result { headsCount += 1 } else { tailsCount += 1 }
             }
-                .buttonStyle(.plain)
-                .focusEffectDisabled()
+            isFlipping = false
         }
     }
-}
-#Preview{
-    MenuView()
+
+    var body: some View {
+        ToolScreen(title: "Coin Flip",
+                   subtitle: "Heads or tails? Let fate decide.",
+                   symbol: "circle.lefthalf.filled",
+                   tint: .green) {
+            Card(padding: 32) {
+                VStack(spacing: 24) {
+                    Coin(isHeads: isHeads)
+                        .frame(width: 170, height: 170)
+                        .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0))
+
+                    Text(hasFlipped ? (isHeads ? "Heads!" : "Tails!") : "Ready to flip")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(hasFlipped ? .primary : .secondary)
+                        .opacity(isFlipping ? 0.3 : 1)
+                }
+            }
+
+            Button("Flip Coin", systemImage: "arrow.triangle.2.circlepath", action: flip)
+                .buttonStyle(.primary(.green))
+                .focusEffectDisabled()
+                .keyboardShortcut(.defaultAction)
+                .disabled(isFlipping)
+
+            HStack(spacing: 14) {
+                TallyView(label: "Heads", count: headsCount)
+                TallyView(label: "Tails", count: tailsCount)
+            }
+        }
+    }
 }
 
+/// A gold coin showing either heads or tails.
+private struct Coin: View {
+    let isHeads: Bool
+
+    private let gold = Color(red: 0.98, green: 0.80, blue: 0.25)
+    private let darkGold = Color(red: 0.78, green: 0.55, blue: 0.05)
+
+    var body: some View {
+        GeometryReader { geo in
+            let side = min(geo.size.width, geo.size.height)
+
+            ZStack {
+                Circle()
+                    .fill(gold)
+                Circle()
+                    .strokeBorder(darkGold, lineWidth: side * 0.05)
+                Circle()
+                    .strokeBorder(darkGold.opacity(0.6), lineWidth: side * 0.015)
+                    .padding(side * 0.12)
+                Image(systemName: isHeads ? "crown.fill" : "star.fill")
+                    .font(.system(size: side * 0.32, weight: .bold))
+                    .foregroundStyle(darkGold)
+            }
+            .frame(width: side, height: side)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement()
+        .accessibilityLabel(isHeads ? "Heads" : "Tails")
+    }
+}
+
+private struct TallyView: View {
+    let label: String
+    let count: Int
+
+    var body: some View {
+        Card(padding: 14) {
+            VStack(spacing: 2) {
+                Text("\(count)")
+                    .font(.title.weight(.semibold).monospacedDigit())
+                    .contentTransition(.numericText())
+                Text(label)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+#Preview {
+    CoinFlipView()
+}
