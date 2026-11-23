@@ -13,5 +13,6 @@ struct RandomiserApp: App {
         WindowGroup {
             MenuView()
         }
+        .defaultSize(width: 820, height: 640)
     }
 }
